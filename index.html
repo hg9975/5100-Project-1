@@ -1,0 +1,432 @@
+<html><head>
+<title>INFO 5100 - Final Project</title>
+
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style>
+
+    div#headlines {
+      margin-top: 30px;
+      margin-down: 20px;
+      margin-left: 10px;
+    }
+    h1 {
+      font-family: New Century Schoolbook, TeX Gyre Schola, serif;
+      font-style: italic;
+    }
+    div#headlines p {
+      font-family: New Century Schoolbook, TeX Gyre Schola, serif;
+      font-size: 18px;
+    }
+
+    div#description1 p#title1 {
+      position: relative;
+      left: 105px;
+      top: 10px;
+
+      font-family: Impact, fantasy;
+      font-size: 20px;
+      font-weight: bold;
+      opacity: 0.75;
+    }
+    div#description1 p#description1 {
+      position: relative;
+      left: 20px;
+      right: 10px;
+      font-family: Courier;
+      font-size: 15px;
+      opacity: 0.85;
+    }
+
+    div#description2 p#title2 {
+      position: relative;
+      left: 60px;
+      top: 10px;
+      font-family: Impact, fantasy;
+      font-size: 20px;
+      font-weight: bold;
+      opacity: 0.75;
+    }
+    div#description2 p#description2 {
+      position: relative;
+      left: 20px;
+      right: 20px;
+      font-family: Courier;
+      font-size: 15px;
+      opacity: 0.85;
+    }
+    div#description2 p#note {
+      position: absolute;
+      left: 28px;
+      top: 1220px;
+      font-family: Courier;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    svg#secondplot text#winners {
+      text-anchor: start;
+      alignment-baseline: middle;
+      font-family: Courier;
+      font-size: 14px;
+      fill: #C14242;
+      fill-opacity: 0.8;
+      font-weight: bold;
+    }
+
+    svg#secondplot text#nominees {
+      text-anchor: start;
+      alignment-baseline: middle;
+      font-family: Courier;
+      font-size: 14px;
+      fill: #2C77D2;
+      fill-opacity: 0.8;
+      font-weight: bold;
+    }
+
+    .gridlines line {
+      stroke: #d3d3d3;
+    }
+
+    .gridlines .domain {
+      stroke: none;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <div id="headlines">
+
+    <h1>Exploring Oscar Best Picture Winners and Nominees 2000-2019</h1>
+    <p>Team: Han Gao (hg359), Pengwei Tian (pt392), Eva Kang (yk622), Haixin Tang (ht472)<p>
+
+  </div>
+
+  <div id="description1" style="height: 110; width: 650; background: mistyrose">
+    <p id="title1">Oscar Best Picture Winners IMDB Ratings, 2000-2019</p>
+    <p id="description1">
+      The average IMDB scores for Oscar Winners from 2000-2019 is <b>7.985</b>.<br>
+      This shows a high agreement between Oscar critics' and general audiences' film tastes.
+    </p>
+  </div>
+
+  <div id="canvas1">
+    <!-- Main Plot Area -->
+    <svg id="firstplot" height="800" width="650" style="background: oldlace" >
+    </svg>
+  </div>
+
+  <div id="description2" style="height: 200; width: 650; background: mistyrose">
+    <p id="title2">Oscar Best Picture Winners & Nominees by Genres, 2000-2019</p>
+    <p id="description2">
+      This visualization presents <b>143</b> Oscar Best Picture films by <b>8</b> genres,
+      which include <b>20</b> winners and <b>123</b> nominees, from 2000-2019. <b><i>Biography</i></b>,<br>
+      <b><i>Drama</i></b>, and <b><i>Comedy</i></b> are top 3 favorite genres by Oscar critics, which<br>
+      has <b>6</b>, <b>4</b>, and <b>4</b> winners respectively. <b><i>Drama</i></b> is the most competitive
+      genre in Oscar, which has the most winners and nominees. There is <br><i><b>only 1 Horror film nominating Oscar
+      in the past 20 years</b></i>. Therefore, <br> <i>what are criteria for Oscar?</i>
+    </p>
+    <p id="note">
+      <i><b>NOTE: circle radius represents number of films</b></i>
+    </p>
+  </div>
+
+  <div id="canvas2">
+    <!-- Main Plot Area -->
+    <svg id="secondplot" height="800" width="650" style="background: oldlace" >
+      <text id="winners", x="580", y="75">Winner</text>
+      <text id="nominees", x="580", y="95">Nominee</text>
+    </svg>
+
+  </div>
+
+  <!-- The First Plot -->
+  <div id="plots">
+    <script id="plots">
+      // Create arrays to hold Winners, Nominees from 2000-2019
+      let winners = new Array();
+      let nominees = new Array();
+
+      // Read in data file
+      d3.csv("oscars_df.csv", d3.autoType )
+        .then( (data) => {
+
+          // Test the data
+          console.log(data);
+
+          // Filter films from 2000-2019
+          data = data.filter( (d) => {return d["Oscar Year"]>=2000
+                                          && d["Oscar Year"]<=2019});
+
+          console.log(data);
+          // Get winners from 2000-2019
+          winners = data.filter( (d) => {return d["Award"] === "Winner"});
+          console.log("Winner: ", winners);
+          // Get nominees from 2000-2019
+          nominees = data.filter( (d) => {return d["Award"] === "Nominee"});
+          console.log("Nominee: ", nominees);
+          // Get years in an array
+          let year = d3.map(data, d => d["Oscar Year"]);
+          console.log(year);
+
+          // Create 600x600 canvas
+          const svg_1 = d3.select("svg#firstplot");
+
+          const width_1 = svg_1.attr("width");
+          const height_1 = svg_1.attr("height");
+          const margin_1 = {top: 20, right: 80, bottom: 40, left: 30};
+
+          const chartWidth_1 = width_1 - margin_1.left - margin_1.right;
+          const chartHeight_1 = height_1 - margin_1.top - margin_1.bottom;
+
+          let annotations_1 = svg_1.append("g").attr("id","annotations");
+
+          let chartArea_1 = svg_1.append("g").attr("id","points")
+                         .attr("transform",`translate(${margin_1.left},${margin_1.top})`);
+
+          const yearExtent = d3.extent(winners, d => d["Oscar Year"]);
+          const yearScale = d3.scaleBand().domain(year).range([chartHeight_1, 0]);
+
+          const imdbExtent = d3.extent(winners, d => d["IMDB Rating"]);
+          const imdbScale = d3.scaleLinear()
+                        .domain([Math.floor(imdbExtent[0]-2), 10])
+                        .range([0, chartWidth_1]);
+
+          // Create Axis & Gridlines
+          let bottomAxis_1 = d3.axisBottom(imdbScale)
+                              .ticks(6);
+          let bottomGridlines_1 = d3.axisBottom(imdbScale)
+                                  .tickSize(-chartHeight_1)
+                                  .tickFormat("")
+                                  .ticks(6);
+
+          // X axis
+          annotations_1.append("g")
+            .attr("class", "x axis")
+            .attr("transform",`translate(${margin_1.left+20},${chartHeight_1+margin_1.top+10})`)
+            .call(bottomAxis_1);
+
+          // vertical Gridlines
+          annotations_1.append("g")
+            .attr("class", "x gridlines")
+            .attr("transform",`translate(${margin_1.left+20},${chartHeight_1+margin_1.top+10})`)
+            .call(bottomGridlines_1);
+
+
+          let leftAxis_1 = d3.axisLeft(yearScale)
+                            .tickFormat(d3.format("d"));
+
+          // Y axis
+          annotations_1.append("g")
+            .attr("class", "y axis")
+            .attr("transform",`translate(${margin_1.left+20},${margin_1.top+10})`)
+            .call(leftAxis_1);
+
+          // calculate the sum of all IMDB ratings for winners
+          let sum_score = 0;
+          // draw IMDB Ratings for Each Winner
+          winners.forEach( (d,i) => {
+            sum_score += d["IMDB Rating"];
+
+            chartArea_1.append("rect")
+                      .attr("x", 20)
+                      .attr("y", yearScale(d["Oscar Year"])+20)
+                      .attr("width", imdbScale(d["IMDB Rating"]))
+                      .attr("height", 14)
+                      .attr("id", i)
+                      .style("stroke-width", 0)
+                      .style("fill", "#C14242")
+                      .style("fill-opacity", 0.55);
+
+            // Film Name
+            chartArea_1.append("text")
+                      .attr("x", 30)
+                      .attr("y", yearScale(d["Oscar Year"])+15)
+                      .text(d["Film"])
+
+                      .style("font-family", "Courier")
+                      .style("font-size", 14)
+                      .style("font-style", "italic")
+                      .style("font-variant", "small-caps")
+                      .style("font-weight", "bold")
+                      .style("opacity", 0.7)
+                      .style("text-anchor", "start")
+                      .style("alignment-baseline", "middle");
+
+            // IMDB Rating
+            chartArea_1.append("text")
+                      .attr("x", imdbScale(d["IMDB Rating"])+25)
+                      .attr("y", yearScale(d["Oscar Year"])+20)
+                      .text(d["IMDB Rating"])
+
+                      .style("font-family", "Courier")
+                      .style("font-size", 14)
+                      .style("fill", "#D22C2C")
+                      .style("opacity", 0.8)
+                      .style("text-anchor", "start")
+                      .style("alignment-baseline", "hanging");
+
+          });
+
+          // Calculate average IMDB ratings for Winners, 2000-2019
+          console.log("Average IMDB Scores for Winners: ", sum_score/20);
+
+          //
+          // The second plot starts here
+          //
+          // Create canvas for the second plot
+          const svg_2 = d3.select("svg#secondplot");
+
+          const width_2 = svg_2.attr("width");
+          const height_2 = svg_2.attr("height");
+          const margin_2 = {top: 30, right: 130, bottom: 40, left: 30};
+
+          const chartWidth_2 = width_2 - margin_2.left - margin_2.right;
+          const chartHeight_2 = height_2 - margin_2.top - margin_2.bottom;
+
+          let annotations_2 = svg_2.append("g").attr("id","annotations2");
+
+          let chartArea_2 = svg_2.append("g").attr("id","points2")
+                         .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
+
+
+          // Add circle labels for winners & nominees
+          svg_2.append("circle")
+              .attr("id", "winner_label")
+              .attr("cx", 570)
+              .attr("cy", 75)
+              .attr("r", 4)
+              .style("fill", "#C14242")
+              .style("opacity", 0.55);
+
+          svg_2.append("circle")
+              .attr("id", "nominee_label")
+              .attr("cx", 570)
+              .attr("cy", 95)
+              .attr("r", 4)
+              .style("fill", "#2C77D2")
+              .style("opacity", 0.55);
+
+          // Create yearExtent2 & yearScale2
+          const yearExtent2 = d3.extent(data, d => d["Oscar Year"]);
+          const yearScale2 = d3.scaleBand().domain(year).range([chartHeight_2, 0]);
+
+          // select all available genres
+          let genre = d3.map(data, d => d["Movie Genre"].split(',')[0]);
+
+          // Build genreScale
+          const genreScale = d3.scaleBand().domain(genre).range([0,chartWidth_2])
+                                          .padding(0.05);
+          // Test the genreScale
+          console.log("All Genres: ", genreScale.domain());
+
+          // Create x axis & gridlines
+          let bottomAxis_2 = d3.axisBottom(genreScale)
+                              .ticks(6);
+
+          let bottomGridlines_2 = d3.axisBottom(genreScale)
+                                  .tickSize(-chartHeight_2)
+                                  .tickFormat("")
+                                  .ticks(6);
+
+          // X axis
+          annotations_2.append("g")
+            .attr("class", "x axis")
+            .attr("transform",`translate(${margin_2.left+20},${chartHeight_2+margin_2.top+10})`)
+            .call(bottomAxis_2);
+
+          // vertical Gridlines
+          annotations_2.append("g")
+            .attr("class", "x gridlines")
+            .attr("transform",`translate(${margin_2.left+20},${chartHeight_2+margin_2.top+10})`)
+            .call(bottomGridlines_2);
+
+          // Creat y axis & gridlines
+          let leftAxis_2 = d3.axisLeft(yearScale2)
+                            .tickFormat(d3.format("d"));
+
+          let leftGridlines_2 = d3.axisLeft(yearScale2)
+                                  .tickSize(-chartWidth_2)
+                                  .tickFormat("");
+
+          annotations_2.append("g")
+            .attr("class", "y axis")
+            .attr("transform",`translate(${margin_2.left+20},${margin_2.top+10})`)
+            .call(leftAxis_2);
+
+          annotations_2.append("g")
+            .attr("class", "y gridlines")
+            .attr("transform",`translate(${margin_2.left+20},${margin_2.top+10})`)
+            .call(leftGridlines_2);
+
+          // Create a dictionary countring the number of films in each genre per year
+          let genreDict = new Array();
+          // find the min and max value of films in genreDict
+          let minCount = 1;
+          let maxCount = 0;
+
+          data.forEach( (d,i) => {
+            // get the genre of the film
+            let genre_of_d = d["Movie Genre"].split(',')[0];
+            // check whether genre_of_d is a key of genreDict
+            if((genre_of_d in genreDict) === false){
+              // create the key
+              genreDict[genre_of_d] = {}
+            }
+            // get the year of the film
+            let year_of_d = d["Oscar Year"];
+            // check whether year_of_d is a key in genreDict[genre_of_d]
+            if((year_of_d in genreDict[genre_of_d]) === false){
+              genreDict[genre_of_d][year_of_d] = 0
+            }
+            // increament the number of film
+            genreDict[genre_of_d][year_of_d] += 1;
+            minCount = Math.min(minCount, genreDict[genre_of_d][year_of_d])
+            maxCount = Math.max(maxCount, genreDict[genre_of_d][year_of_d]);
+          })
+
+          // Test genreDict
+          console.log("genreDict: ", genreDict);
+          console.log("maxCount: ", maxCount);
+
+          // Create radiusScale & colorScale
+          const radiusScale = d3.scaleLinear().domain([minCount, maxCount]).range([5, 20]);
+          const colorScale = d3.scaleOrdinal().domain(["Winner", "Nominee"]).range(["#C14242", "#2C77D2"]);
+
+          // Check the winner genre for each year
+          let winner_genre = new Array();
+          winners.forEach( (d,i) => {
+            winner_genre[d["Oscar Year"]] = d["Movie Genre"].split(',')[0];
+          })
+          console.log("Winner Genre: ", winner_genre);
+
+          // Create circles for each data point
+          for (var genrekey in genreDict) {
+            for (var yearkey in genreDict[genrekey]) {
+              // compute the radius
+              let r = radiusScale(genreDict[genrekey][yearkey]);
+              chartArea_2.append("circle")
+                        .attr("id", genrekey + yearkey)
+                        .attr("cx", genreScale(genrekey) + margin_2.left + 19)
+                        .attr("cy", yearScale2(Number(yearkey)) + margin_2.top - 2)
+                        .attr("r", r)
+                        .style("fill", function(){
+                          if (genrekey === winner_genre[yearkey]) { return colorScale("Winner") }
+                          else { return colorScale("Nominee") }
+                        })
+                        .style("fill-opacity", 0.55)
+            }
+
+          }
+
+      });
+
+    </script>
+
+  </div>
+
+
+</html>
